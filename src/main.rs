@@ -1,6 +1,6 @@
 use std::path::Path;
 use crate::parse_args::parse_args;
-use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use chrono::{DateTime, Utc, Local, NaiveDateTime, TimeZone};
 use clap::ArgMatches;
 use unifi_protect::*;
 
@@ -73,7 +73,8 @@ async fn download(args: &ArgMatches) {
                 .num_days() as usize
                 + 1,
         ) {
-            for hour in 0..24 {
+            // for hour in 0..24 {
+            for hour in 07..19 {
                 let start_time = date.and_hms_opt(hour, 0, 0).expect("Failed to construct dateTime");
                 let end_time = date.and_hms_opt(hour, 59, 59).expect("Failed to construct dateTime");
                 time_frames.push((
@@ -90,8 +91,8 @@ async fn download(args: &ArgMatches) {
                 .num_days() as usize
                 + 1,
         ) {
-            let start_time = date.and_hms_opt(0, 0, 0).expect("Failed to construct dateTime");
-            let end_time = date.and_hms_opt(23, 59, 59).expect("Failed to construct dateTime");
+            let start_time = date.and_hms_opt(07, 0, 0).expect("Failed to construct dateTime");
+            let end_time = date.and_hms_opt(15, 59, 59).expect("Failed to construct dateTime");
             time_frames.push((
                 Local.from_local_datetime(&start_time).unwrap(),
                 Local.from_local_datetime(&end_time).unwrap(),
@@ -134,16 +135,19 @@ async fn download(args: &ArgMatches) {
                 println!("File '{}' already exists, skipping...", file_path);
                 continue;
             }
+            let now: DateTime<Utc> = Utc::now();
+    
             println!(
-                "Downloading {} video for camera '{}' (file path: {})",
-                args.get_one::<String>("recording_type").unwrap(),
+                "{} Downloading {} video for camera '{}' (file path: {})",
+                now.to_rfc3339(), args.get_one::<String>("recording_type").unwrap(),
                 camera.name, file_path
             );
             if !server
                 .download_footage(
                     camera,
                     &file_path,
-                    args.get_one::<String>("recording_type").unwrap(),
+                    // args.get_one::<String>("recording_type").unwrap(),
+                    "timelapse&fps=300",
                     time_frame.0.timestamp_millis(),
                     time_frame.1.timestamp_millis(),
                 )
